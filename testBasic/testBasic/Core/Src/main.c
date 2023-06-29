@@ -19,12 +19,13 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "dma.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdlib.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,14 +51,13 @@ extern volatile USART_Token_t USART1_Token;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+uint8_t *msg = NULL;
 /* USER CODE END 0 */
 
 /**
@@ -69,9 +69,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
-
-  /* MPU Configuration--------------------------------------------------------*/
-  MPU_Config();
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -94,8 +91,9 @@ int main(void)
   MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_UART7_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-  
+  USART_FSM_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -109,6 +107,23 @@ int main(void)
     if (USART1_Token.Is_Msg_Rcv)
     {
       USART1_Token.Is_Msg_Rcv=false;
+      			debug("Received from wifi:\nmessage length:%d\n", USART1_Token.Rcv_len_Temp);
+			if (lwrb_get_full((lwrb_t *)&USART1_Token.lwrb_handle))
+			{
+				msg = (uint8_t *)malloc(USART1_Token.Rcv_len_Temp);
+				lwrb_read((lwrb_t *)&USART1_Token.lwrb_handle, msg, USART1_Token.Rcv_len_Temp);
+				debug("Message from wifi in hex:");
+				for (size_t i = 0; i < USART1_Token.Rcv_len_Temp; i++)
+				{
+					printf("%.2x ", msg[i]);
+				}
+				printf("\n");
+				// excute message
+				// modbus_recvMsg(&USART_ACT, msg, USART1_Token.Rcv_len_Temp);
+				// USART_ACT.USART_Clear(USART1);
+				free(msg);
+        msg=NULL;
+			}
     }
     
     HAL_Delay(1000);
@@ -173,35 +188,6 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
-
-/* MPU Configuration */
-
-void MPU_Config(void)
-{
-  MPU_Region_InitTypeDef MPU_InitStruct = {0};
-
-  /* Disables the MPU */
-  HAL_MPU_Disable();
-
-  /** Initializes and configures the Region and the memory to be protected
-  */
-  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
-  MPU_InitStruct.Number = MPU_REGION_NUMBER0;
-  MPU_InitStruct.BaseAddress = 0x0;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_4GB;
-  MPU_InitStruct.SubRegionDisable = 0x87;
-  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
-  MPU_InitStruct.AccessPermission = MPU_REGION_NO_ACCESS;
-  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
-  MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
-  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
-  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
-
-  HAL_MPU_ConfigRegion(&MPU_InitStruct);
-  /* Enables the MPU */
-  HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
-
-}
 
 /**
   * @brief  This function is executed in case of error occurrence.

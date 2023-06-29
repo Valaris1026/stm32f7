@@ -3,14 +3,14 @@
         {
             "name": "testBasic",
             "includePath": [
-                "d:\\Testspace\\stm32F767IGT6\\testBasic\\testBasic\\Core\\Inc",
-                "d:\\Testspace\\stm32F767IGT6\\testBasic\\testBasic\\Drivers\\STM32F7xx_HAL_Driver\\Inc",
-                "d:\\Testspace\\stm32F767IGT6\\testBasic\\testBasic\\Drivers\\STM32F7xx_HAL_Driver\\Inc\\Legacy",
-                "d:\\Testspace\\stm32F767IGT6\\testBasic\\testBasic\\Drivers\\CMSIS\\Device\\ST\\STM32F7xx\\Include",
-                "d:\\Testspace\\stm32F767IGT6\\testBasic\\testBasic\\Drivers\\CMSIS\\Include",
-                "d:\\Testspace\\stm32F767IGT6\\testBasic\\testBasic\\MDK-ARM",
-                "d:\\Testspace\\stm32F767IGT6\\testBasic\\testBasic\\Core\\Src",
-                "d:\\Testspace\\stm32F767IGT6\\testBasic\\testBasic\\Drivers\\STM32F7xx_HAL_Driver\\Src"
+                "h:\\TestSpace\\stm32f767igt6\\stm32f7\\testBasic\\testBasic\\Core\\Inc",
+                "h:\\TestSpace\\stm32f767igt6\\stm32f7\\testBasic\\testBasic\\Drivers\\STM32F7xx_HAL_Driver\\Inc",
+                "h:\\TestSpace\\stm32f767igt6\\stm32f7\\testBasic\\testBasic\\Drivers\\STM32F7xx_HAL_Driver\\Inc\\Legacy",
+                "h:\\TestSpace\\stm32f767igt6\\stm32f7\\testBasic\\testBasic\\Drivers\\CMSIS\\Device\\ST\\STM32F7xx\\Include",
+                "h:\\TestSpace\\stm32f767igt6\\stm32f7\\testBasic\\testBasic\\Drivers\\CMSIS\\Include",
+                "h:\\TestSpace\\stm32f767igt6\\stm32f7\\testBasic\\testBasic\\MDK-ARM",
+                "h:\\TestSpace\\stm32f767igt6\\stm32f7\\testBasic\\testBasic\\Core\\Src",
+                "h:\\TestSpace\\stm32f767igt6\\stm32f7\\testBasic\\testBasic\\Drivers\\STM32F7xx_HAL_Driver\\Src"
             ],
             "defines": [
                 "USE_HAL_DRIVER",

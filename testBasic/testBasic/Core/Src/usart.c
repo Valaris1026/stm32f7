@@ -44,7 +44,8 @@ void USART_FSM_Init(void)
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
-  
+  			lwrb_write((lwrb_t *)&USART1_Token.lwrb_handle, (uint8_t *)U1_RX_BUF, (uint32_t)USART1_Token.Rcv_len_Temp);
+  USART1_Token.Rcv_len_Temp=USART1_Token.Rcv_len_Temp ;
 }
 /* USER CODE END 0 */
 
@@ -110,6 +111,7 @@ void MX_USART1_UART_Init(void)
   }
   /* USER CODE BEGIN USART1_Init 2 */
   __HAL_UART_ENABLE_IT(&huart1,UART_IT_IDLE);
+  HAL_DMA_Start_IT(&hdma_usart1_rx,huart1.Instance->RDR,(uint32_t)U1_RX_BUF,WIFI_BUF_MAXLEN);
   /* USER CODE END USART1_Init 2 */
 
 }
