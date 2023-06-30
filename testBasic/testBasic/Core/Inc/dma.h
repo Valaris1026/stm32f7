@@ -41,7 +41,12 @@ extern "C" {
 void MX_DMA_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+void DMA_USART_Config( DMA_TypeDef * DMA_name,
+                       uint32_t stream,
+                       uint32_t channel,
+                       uint32_t * buf,
+                       uint32_t buflen,
+                       USART_TypeDef * USARTx );
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

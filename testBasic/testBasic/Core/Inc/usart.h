@@ -33,20 +33,16 @@ extern "C" {
 #include "lwrb.h"
 /* USER CODE END Includes */
 
-extern UART_HandleTypeDef huart7;
-
-extern UART_HandleTypeDef huart1;
-
 /* USER CODE BEGIN Private defines */
-#define WIFI_BUF_MAXLEN 2048
+#define BUF_MAXLEN 2048
 
 typedef struct __USART_H__
 {
-  void (*USART_Start)(UART_HandleTypeDef *USART);
-  void (*USART_Stop)(UART_HandleTypeDef *USART);
-  void (*USART_Reset)(UART_HandleTypeDef *USART);
-  void (*USART_Clear)(UART_HandleTypeDef *USART);
-  void (*USART_Send)(UART_HandleTypeDef *USART,uint8_t *buf, uint32_t size);
+  void (*USART_Start)(USART_TypeDef *USART);
+  void (*USART_Stop)(USART_TypeDef *USART);
+  void (*USART_Reset)(USART_TypeDef *USART);
+  void (*USART_Clear)(USART_TypeDef *USART);
+  void (*USART_Send)(USART_TypeDef *USART,uint8_t *buf, uint32_t size);
   uint16_t (*USART_CRC)(uint8_t *ptr,int len,uint16_t *CRC16Temp);
 }USART_ACT_t;
 

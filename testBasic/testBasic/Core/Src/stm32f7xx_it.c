@@ -56,12 +56,13 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern TIM_HandleTypeDef htim1;
-extern DMA_HandleTypeDef hdma_usart1_rx;
-extern UART_HandleTypeDef huart7;
-extern UART_HandleTypeDef huart1;
+
 /* USER CODE BEGIN EV */
 extern volatile USART_Token_t USART1_Token;
+extern volatile USART_Token_t UART7_Token;
+ 
+extern volatile uint8_t U7_RX_BUF[BUF_MAXLEN] ;
+extern volatile uint8_t U1_RX_BUF[BUF_MAXLEN] ;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -189,7 +190,7 @@ void SysTick_Handler(void)
   /* USER CODE BEGIN SysTick_IRQn 0 */
 
   /* USER CODE END SysTick_IRQn 0 */
-  HAL_IncTick();
+
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
   /* USER CODE END SysTick_IRQn 1 */
@@ -203,6 +204,35 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles DMA1 stream3 global interrupt.
+  */
+void DMA1_Stream3_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Stream3_IRQn 0 */
+      if( LL_DMA_IsActiveFlag_HT3( DMA1 ) ) /**/
+    {
+        LL_DMA_ClearFlag_HT3( DMA1 );
+        // UART7_Token.Is_Msg_Rcv = true;
+        // UART7_Token.Rcv_len_Temp = BUF_MAXLEN / 2;
+        // UART7_Token.HT_count++;
+        // lwrb_write( ( lwrb_t * ) &UART7_Token.lwrb_handle, ( uint8_t * ) U7_RX_BUF, ( uint32_t ) UART7_Token.Rcv_len_Temp ); /*Write in lwrb buffer*/
+    }
+
+    if( LL_DMA_IsActiveFlag_TC3( DMA1 ) ) /**/
+    {
+        // UART7_Token.Is_Msg_Rcv = true;
+        LL_DMA_ClearFlag_TC3( DMA1 );
+        // UART7_Token.TC_count++;
+        // lwrb_write( ( lwrb_t * ) &UART7_Token.lwrb_handle, ( uint8_t * ) &U7_RX_BUF[ UART7_Token.Rcv_len_Temp ], ( uint32_t ) UART7_Token.Rcv_len_Temp ); /*Write in lwrb buffer*/
+    }
+  /* USER CODE END DMA1_Stream3_IRQn 0 */
+
+  /* USER CODE BEGIN DMA1_Stream3_IRQn 1 */
+
+  /* USER CODE END DMA1_Stream3_IRQn 1 */
+}
+
+/**
   * @brief This function handles TIM1 update interrupt and TIM10 global interrupt.
   */
 void TIM1_UP_TIM10_IRQHandler(void)
@@ -210,7 +240,7 @@ void TIM1_UP_TIM10_IRQHandler(void)
   /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 0 */
 
   /* USER CODE END TIM1_UP_TIM10_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim1);
+
   /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 1 */
 
   /* USER CODE END TIM1_UP_TIM10_IRQn 1 */
@@ -222,13 +252,40 @@ void TIM1_UP_TIM10_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-  if (__HAL_UART_GET_IT(&huart1,UART_IT_IDLE))
-  {
-    USART1_Token.Is_Msg_Rcv=true;
-  }
+        if( LL_USART_IsActiveFlag_IDLE( USART1 ) )
+    {
+        LL_USART_ClearFlag_IDLE( USART1 );
+        LL_DMA_DisableStream( DMA2, LL_DMA_STREAM_2 );
+
+        USART1_Token.Is_Msg_Rcv = true;
+        USART1_Token.Rcv_len_Temp = BUF_MAXLEN - (  LL_DMA_GetDataLength( DMA2, LL_DMA_STREAM_2 ) );
+
+        // if( USART1_Token.HT_count != USART1_Token.TC_count )
+        // {
+        //     lwrb_write( ( lwrb_t * ) &USART1_Token.lwrb_handle, ( uint8_t * ) &U1_RX_BUF[ BUF_MAXLEN / 2 ], ( uint32_t ) ( USART1_Token.Rcv_len_Temp - BUF_MAXLEN / 2 ) );
+        //     USART1_Token.Rcv_len_Temp = USART1_Token.Rcv_len_Temp + BUF_MAXLEN * USART1_Token.TC_count;
+        // }
+        // else
+        // {
+            lwrb_write( ( lwrb_t * ) &USART1_Token.lwrb_handle, ( uint8_t * ) U1_RX_BUF, ( uint32_t ) USART1_Token.Rcv_len_Temp );
+            //addlist
+            // USART1_Token.Rcv_len_Temp = USART1_Token.Rcv_len_Temp + BUF_MAXLEN * USART1_Token.TC_count;
+        // }
+
+        USART1_Token.HT_count = 0;
+        USART1_Token.TC_count = 0;
+
+        LL_DMA_SetDataLength( DMA2, LL_DMA_STREAM_2, BUF_MAXLEN );
+        LL_DMA_EnableStream( DMA2, LL_DMA_STREAM_2 );
+    }
+
+    if( LL_USART_IsActiveFlag_ORE( USART1 ) ) /*Serial port overflow*/
+    {
+        LL_USART_ReceiveData8( USART1 );
+        LL_USART_ClearFlag_ORE( USART1 );
+    }
   
   /* USER CODE END USART1_IRQn 0 */
-  HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
   
   /* USER CODE END USART1_IRQn 1 */
@@ -240,9 +297,24 @@ void USART1_IRQHandler(void)
 void DMA2_Stream2_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA2_Stream2_IRQn 0 */
+      if( LL_DMA_IsActiveFlag_HT2( DMA2 ) ) /**/
+    {
+        LL_DMA_ClearFlag_HT2( DMA2 );
+        // UART7_Token.Is_Msg_Rcv = true;
+        // UART7_Token.Rcv_len_Temp = BUF_MAXLEN / 2;
+        // UART7_Token.HT_count++;
+        // lwrb_write( ( lwrb_t * ) &UART7_Token.lwrb_handle, ( uint8_t * ) U7_RX_BUF, ( uint32_t ) UART7_Token.Rcv_len_Temp ); /*Write in lwrb buffer*/
+    }
 
+    if( LL_DMA_IsActiveFlag_TC2( DMA2 ) ) /**/
+    {
+        // UART7_Token.Is_Msg_Rcv = true;
+        LL_DMA_ClearFlag_TC2( DMA2 );
+        // UART7_Token.TC_count++;
+        // lwrb_write( ( lwrb_t * ) &UART7_Token.lwrb_handle, ( uint8_t * ) &U7_RX_BUF[ UART7_Token.Rcv_len_Temp ], ( uint32_t ) UART7_Token.Rcv_len_Temp ); /*Write in lwrb buffer*/
+    }
   /* USER CODE END DMA2_Stream2_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_usart1_rx);
+
   /* USER CODE BEGIN DMA2_Stream2_IRQn 1 */
 
   /* USER CODE END DMA2_Stream2_IRQn 1 */
@@ -254,9 +326,40 @@ void DMA2_Stream2_IRQHandler(void)
 void UART7_IRQHandler(void)
 {
   /* USER CODE BEGIN UART7_IRQn 0 */
+      if( LL_USART_IsActiveFlag_IDLE( UART7 ) )
+    {
+        LL_USART_ClearFlag_IDLE( UART7 );
+        LL_DMA_DisableStream( DMA1, LL_DMA_STREAM_3 );
 
+        UART7_Token.Is_Msg_Rcv = true;
+        UART7_Token.Rcv_len_Temp = BUF_MAXLEN - (  LL_DMA_GetDataLength( DMA1, LL_DMA_STREAM_3 ) );
+
+        // if( UART7_Token.HT_count != UART7_Token.TC_count )
+        // {
+        //     lwrb_write( ( lwrb_t * ) &UART7_Token.lwrb_handle, ( uint8_t * ) &U7_RX_BUF[ BUF_MAXLEN / 2 ], ( uint32_t ) ( UART7_Token.Rcv_len_Temp - BUF_MAXLEN / 2 ) );
+        //     UART7_Token.Rcv_len_Temp = UART7_Token.Rcv_len_Temp + BUF_MAXLEN * UART7_Token.TC_count;
+        // }
+        // else
+        // {
+            lwrb_write( ( lwrb_t * ) &UART7_Token.lwrb_handle, ( uint8_t * ) U7_RX_BUF, ( uint32_t ) UART7_Token.Rcv_len_Temp );
+            //addlist
+            // UART7_Token.Rcv_len_Temp = UART7_Token.Rcv_len_Temp + BUF_MAXLEN * UART7_Token.TC_count;
+        // }
+
+        UART7_Token.HT_count = 0;
+        UART7_Token.TC_count = 0;
+
+        LL_DMA_SetDataLength( DMA1, LL_DMA_STREAM_3, BUF_MAXLEN );
+        LL_DMA_EnableStream( DMA1, LL_DMA_STREAM_3 );
+    }
+
+    if( LL_USART_IsActiveFlag_ORE( UART7 ) ) /*Serial port overflow*/
+    {
+        LL_USART_ReceiveData8( UART7 );
+        LL_USART_ClearFlag_ORE( UART7 );
+    }
+  
   /* USER CODE END UART7_IRQn 0 */
-  HAL_UART_IRQHandler(&huart7);
   /* USER CODE BEGIN UART7_IRQn 1 */
 
   /* USER CODE END UART7_IRQn 1 */
